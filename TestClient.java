@@ -54,3 +54,25 @@ private static void loadConfig(String configFile) {
         serverPort = 5000;
     }
 }
+
+    // Send log message
+    public static void sendLog(String level, String message) {
+        try {
+            DatagramSocket socket = new DatagramSocket();
+            InetAddress serverAddress = InetAddress.getByName(serverIP);
+
+            // Manually create JSON-like log string
+            String logEntry = "{ \"level\": \"" + level + "\", \"message\": \"" + message + "\" }";
+
+            byte[] sendData = logEntry.getBytes();
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, serverAddress, serverPort);
+            socket.send(sendPacket);
+            socket.close();
+
+            logToFile(logEntry);
+            System.out.println("Sent & Logged: " + logEntry);
+        } catch (IOException e) {
+            System.out.println("Error sending log: " + e.getMessage());
+        }
+    }
+
