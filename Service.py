@@ -70,3 +70,26 @@ def rate_limited(client_address):
             return True
     client_log_times[client_address] = now
     return False
+
+while True:
+    bytes_address_pair = UDPServerSocket.recvfrom(buffer_size)
+    message = bytes_address_pair[0].decode("utf-8")
+    client_address = bytes_address_pair[1]
+
+    try:
+        log_entry = eval(message)  # Converts string dictionary to actual dictionary
+        log_entry["timestamp"] = datetime.now().isoformat()
+        log_entry["client_ip"] = client_address[0]
+
+        if rate_limited(client_address[0]):
+            print(f"Rate limit exceeded for {client_address[0]}. Dropping log.")
+            continue
+
+        # Append log entry to file
+        with open(log_file, "a") as f:
+            f.write(str(log_entry) + "\n")
+
+        print(f"Logged: {log_entry}")
+
+    except Exception as e:
+        print(f"Error processing log from {client_address[0]}: {message} ({e})")
