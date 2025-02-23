@@ -39,3 +39,25 @@ def load_config(config_file):
         config["server_port"] = 5000
 
     return config
+
+# Load configuration
+config = load_config("config.txt")
+server_ip = config["server_ip"]
+server_port = config["server_port"]
+
+buffer_size = 1024
+log_file = "logs.txt"
+RATE_LIMIT = 5  # Max messages per second per client
+
+# Track last log timestamps per client
+client_log_times = {}
+
+# Ensure log file exists
+if not os.path.exists(log_file):
+    open(log_file, "w").close()
+
+# Create a UDP socket
+UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+UDPServerSocket.bind((server_ip, server_port))
+
+print(f"UDP Logging Service started on {server_ip}:{server_port}")
