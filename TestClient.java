@@ -76,3 +76,13 @@ private static void loadConfig(String configFile) {
         }
     }
 
+
+        // Log locally to a file
+        private static void logToFile(String logEntry) {
+            try (FileWriter writer = new FileWriter(LOG_FILE, true)) {
+                writer.write(logEntry + "\n");
+            } catch (IOException e) {
+                System.out.println("Error writing to client log file: " + e.getMessage());
+            }
+        }
+    
