@@ -61,3 +61,12 @@ UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 UDPServerSocket.bind((server_ip, server_port))
 
 print(f"UDP Logging Service started on {server_ip}:{server_port}")
+
+def rate_limited(client_address):
+    """Check if client is sending logs too fast."""
+    now = time.time()
+    if client_address in client_log_times:
+        if now - client_log_times[client_address] < (1 / RATE_LIMIT):
+            return True
+    client_log_times[client_address] = now
+    return False
