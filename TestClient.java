@@ -86,3 +86,60 @@ private static void loadConfig(String configFile) {
             }
         }
     
+        // Get config file from command-line arguments or use default
+    public static void main(String[] args) {
+
+        String configFile;
+        if (args.length > 0) {
+            configFile = args[0];  // Use provided config file path
+        } else {
+            configFile = "config.txt";  // Default to "config.txt" in the current directory
+        }
+
+        // Load config file
+        loadConfig(configFile);
+
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Select test type: (1) Manual (2) Automated: ");
+        int choice = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        if (choice == 1) {
+            System.out.println("Manual test mode...");
+            while (true) {
+                System.out.print("Enter log level (DEBUG, INFO, WARN, ERROR, FATAL) or 'exit': ");
+                String level = scanner.nextLine().toUpperCase();
+
+                if (level.equals("EXIT")) break;
+
+                System.out.print("Enter log message: ");
+                String message = scanner.nextLine();
+
+                sendLog(level, message);
+            }
+        } else {
+            System.out.println("Automated tests starting...");
+            String[] levels = {"DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
+            String[] messages = {"Test1", "Test2", "Test3", "Test4", "Test5"};
+
+            try {
+                for (int i = 0; i < levels.length; i++) {
+                    sendLog(levels[i], messages[i]);
+                    Thread.sleep(200);
+                }
+
+                System.out.println("Testing rate limit...");
+                for (int i = 0; i < 10; i++) {
+                    sendLog("WARN", "Rate limit test");
+                    Thread.sleep(50);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore interrupted status
+                System.out.println("Sleep interrupted: " + e.getMessage());
+            }
+        }
+
+        scanner.close();
+    }
+}
