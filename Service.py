@@ -73,6 +73,30 @@ def load_config(config_file):
 
     return config
 
+
+# Rate limiting per client
+def rate_limited(client_ip):
+    now = time.time()
+    if client_ip not in client_log_times:
+        client_log_times[client_ip] = []
+
+    # Remove timestamps older than 1 second
+    client_log_times[client_ip] = [
+        timestamp for timestamp in client_log_times[client_ip]
+        if now - timestamp < 1
+    ]
+
+    if len(client_log_times[client_ip]) >= RATE_LIMIT:
+        return True
+
+    client_log_times[client_ip].append(now)
+    return False
+
+# Format Log Entry
+def format_log(level, client_ip, message, request_id):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return f"[{timestamp}] [{level}] [{client_ip}] [{SERVICE_NAME}] {message} [{request_id}]"
+
 # Load configuration
 config = load_config("config.txt")
 server_ip = config["server_ip"]
