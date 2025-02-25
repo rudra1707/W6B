@@ -28,12 +28,12 @@ private static boolean isValidPort(int port) {
     return port >= 1024 && port <= 65535;
 }
 
-// Load configuration from a text file
+// Load configuration from config.txt (no default values)
 private static void loadConfig(String configFile) {
     File file = new File(configFile);
     if (!file.exists()) {
-        System.out.println("Config file not found: " + configFile + ". Using default values.");
-        return;
+        System.out.println("Error: Config file not found. Please provide a valid 'config.txt'.");
+        System.exit(1);
     }
 
     try (Scanner scanner = new Scanner(file)) {
@@ -45,22 +45,23 @@ private static void loadConfig(String configFile) {
                 try {
                     serverPort = Integer.parseInt(line.split("=")[1].trim());
                 } catch (NumberFormatException e) {
-                    System.out.println("Invalid port in config file. Using default 5000.");
-                    serverPort = 5000;
+                    System.out.println("Error: Invalid port format in config file.");
+                    System.exit(1);
                 }
             }
         }
     } catch (IOException e) {
         System.out.println("Error reading config file: " + e.getMessage());
+        System.exit(1);
     }
 
-    if (!isValidIP(serverIP)) {
-        System.out.println("Invalid IP in config file. Using default 127.0.0.1.");
-        serverIP = "127.0.0.1";
+    if (serverIP == null || !isValidIP(serverIP)) {
+        System.out.println("Error: Invalid or missing server IP in config file.");
+        System.exit(1);
     }
-    if (!isValidPort(serverPort)) {
-        System.out.println("Invalid port in config file. Using default 5000.");
-        serverPort = 5000;
+    if (serverPort == 0 || !isValidPort(serverPort)) {
+        System.out.println("Error: Invalid or missing server port in config file.");
+        System.exit(1);
     }
 }
 
