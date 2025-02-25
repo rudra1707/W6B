@@ -89,69 +89,76 @@ private static void loadConfig(String configFile) {
 }
 
 
-        // Log locally to a file
-        private static void logToFile(String logEntry) {
-            try (FileWriter writer = new FileWriter(LOG_FILE, true)) {
-                writer.write(logEntry + "\n");
-            } catch (IOException e) {
-                System.out.println("Error writing to client log file: " + e.getMessage());
+       // Log locally to a file
+    private static void logToFile(String logEntry) {
+        try (FileWriter writer = new FileWriter(LOG_FILE, true)) {
+            writer.write(logEntry + "\n");
+        } catch (IOException e) {
+            System.out.println("Error writing to client log file: " + e.getMessage());
+        }
+    }
+
+    // Manual test feature to use all log levels
+    private static void manualTest() {
+        Scanner scanner = new Scanner(System.in);
+        String[] levels = {DEBUG, INFO, WARN, ERROR, FATAL};
+
+        System.out.println("Manual Logging Test Started:");
+        while (true) {
+            System.out.print("Enter log level (DEBUG, INFO, WARN, ERROR, FATAL) or 'exit': ");
+            String level = scanner.nextLine().trim().toUpperCase();
+
+            if (level.equals("EXIT")) break;
+            if (!Arrays.asList(levels).contains(level)) {
+                System.out.println("Invalid log level. Try again.");
+                continue;
             }
+
+            System.out.print("Enter log message: ");
+            String message = scanner.nextLine();
+            sendLog(level, message, UUID.randomUUID().toString().substring(0, 8)); // Random request ID
         }
-    
-        // Get config file from command-line arguments or use default
+        scanner.close();
+    }
+
+    // Automated test feature
+    private static void automatedTest() {
+        System.out.println("Automated tests starting...");
+        String[] levels = {DEBUG, INFO, WARN, ERROR, FATAL};
+        String[] messages = {"Test1", "Test2", "Test3", "Test4", "Test5"};
+
+        try {
+            for (int i = 0; i < levels.length; i++) {
+                sendLog(levels[i], messages[i], UUID.randomUUID().toString().substring(0, 8));
+                Thread.sleep(200);
+            }
+
+            System.out.println("Testing rate limit...");
+            for (int i = 0; i < 10; i++) {
+                sendLog(WARN, "Rate limit test", UUID.randomUUID().toString().substring(0, 8));
+                Thread.sleep(50);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Restore interrupted status
+            System.out.println("Sleep interrupted: " + e.getMessage());
+        }
+    }
+
     public static void main(String[] args) {
-
-        String configFile;
-        if (args.length > 0) {
-            configFile = args[0];  // Use provided config file path
-        } else {
-            configFile = "config.txt";  // Default to "config.txt" in the current directory
-        }
-
-        // Load config file
-        loadConfig(configFile);
+        loadConfig("config.txt");
 
         Scanner scanner = new Scanner(System.in);
-
         System.out.print("Select test type: (1) Manual (2) Automated: ");
         int choice = scanner.nextInt();
         scanner.nextLine(); // Consume newline
 
         if (choice == 1) {
-            System.out.println("Manual test mode...");
-            while (true) {
-                System.out.print("Enter log level (DEBUG, INFO, WARN, ERROR, FATAL) or 'exit': ");
-                String level = scanner.nextLine().toUpperCase();
-
-                if (level.equals("EXIT")) break;
-
-                System.out.print("Enter log message: ");
-                String message = scanner.nextLine();
-
-                sendLog(level, message);
-            }
+            manualTest();
         } else {
-            System.out.println("Automated tests starting...");
-            String[] levels = {"DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
-            String[] messages = {"Test1", "Test2", "Test3", "Test4", "Test5"};
-
-            try {
-                for (int i = 0; i < levels.length; i++) {
-                    sendLog(levels[i], messages[i]);
-                    Thread.sleep(200);
-                }
-
-                System.out.println("Testing rate limit...");
-                for (int i = 0; i < 10; i++) {
-                    sendLog("WARN", "Rate limit test");
-                    Thread.sleep(50);
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // Restore interrupted status
-                System.out.println("Sleep interrupted: " + e.getMessage());
-            }
+            automatedTest();
         }
 
         scanner.close();
     }
 }
+
