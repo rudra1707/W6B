@@ -6,6 +6,14 @@
 // This client sends log messages to a UDP server. It reads server details from 
 // a config file, validates input, supports retrying, and logs locally.
 
+// Reference for UDP Socket Communication: 
+// https://docs.oracle.com/javase/tutorial/networking/datagrams/clientServer.html
+
+// Reference for File Handling: 
+// https://www.geeksforgeeks.org/filewriter-class-in-java/
+
+// Reference for Reading Files with Scanner: 
+// https://www.javatpoint.com/how-to-read-file-line-by-line-in-java
 
 import java.io.*;
 import java.net.*;
