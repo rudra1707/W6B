@@ -1,3 +1,12 @@
+// FILE: TestClient.java
+// PROJECT: UDP Logging System
+// PROGRAMMER: VIRAJSINH SOLANKI (8981864) & RUDRA NITESHKUMAR BHATT(8980507)
+// FIRST VERSION: 2025-02-25
+// DESCRIPTION:
+// This client sends log messages to a UDP server. It reads server details from 
+// a config file, validates input, supports retrying, and logs locally.
+
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -9,7 +18,7 @@ public class TestClient {
     private static final String logFile = "client_logs.txt";
     private static final int MaxRetries = 3;
 
-    // Log Level Constants (All will be used)
+    // Log Level Constants
     private static final String DEBUG = "DEBUG";
     private static final String INFO = "INFO";
     private static final String WARN = "WARN";
@@ -17,18 +26,36 @@ public class TestClient {
     private static final String FATAL = "FATAL";
 
 
-// Function to validate IP address format
+// FUNCTION: ValidIP
+    // DESCRIPTION:
+    // Checks if an IP address is in correct format.
+    // PARAMETERS:
+    // ip - The IP address to check.
+    // RETURNS:
+    // boolean - True if valid, False otherwise.
 private static boolean ValidIP(String ip) {
     String pattern = "^\\d{1,3}(\\.\\d{1,3}){3}$";
     return Pattern.matches(pattern, ip);
 }
 
-// Function to validate port number
+// FUNCTION: ValidPort
+    // DESCRIPTION:
+    // Checks if a port number is valid.
+    // PARAMETERS:
+    // port - The port number to check.
+    // RETURNS:
+    // boolean - True if valid, False otherwise.
 private static boolean ValidPort(int port) {
     return port >= 1024 && port <= 65535;
 }
 
-// Load configuration from config.txt (no default values)
+// FUNCTION: LoadConfig
+    // DESCRIPTION:
+    // Reads server IP and port from a config file.
+    // PARAMETERS:
+    // configFile - Path to the config file.
+    // RETURNS:
+    // None
 private static void LoadConfig(String configFile) {
     File file = new File(configFile);
     if (!file.exists()) {
@@ -65,7 +92,16 @@ private static void LoadConfig(String configFile) {
     }
 }
 
- // Send log message with retry mechanism and try-with-resources
+ // FUNCTION: sendLog
+    // DESCRIPTION:
+    // Sends a log message to the UDP server with retry.
+    // PARAMETERS:
+    // level - Log level.
+    // message - Log message.
+    // requestId - Unique request ID.
+    // RETURNS:
+    // None
+
  public static void sendLog(String level, String message, String requestId) {
     for (int attempt = 1; attempt <= MaxRetries; attempt++) {
         try (DatagramSocket socket = new DatagramSocket()) {
@@ -78,7 +114,7 @@ private static void LoadConfig(String configFile) {
             socket.send(sendPacket);
             logToFile(logEntry);
             System.out.println("Successfully sent log: " + logEntry);
-            break; // Exit loop if successful
+            break; 
         } catch (IOException e) {
             System.out.println("Attempt " + attempt + " failed: " + e.getMessage());
             if (attempt == MaxRetries) {
@@ -89,7 +125,14 @@ private static void LoadConfig(String configFile) {
 }
 
 
-       // Log locally to a file
+    
+// FUNCTION: logToFile
+    // DESCRIPTION:
+    // Saves the log entry to a local file.
+    // PARAMETERS:
+    // logEntry - The log message to save.
+    // RETURNS:
+    // None
     private static void logToFile(String logEntry) {
         try (FileWriter writer = new FileWriter(logFile, true)) {
             writer.write(logEntry + "\n");
@@ -98,7 +141,13 @@ private static void LoadConfig(String configFile) {
         }
     }
 
-    // Manual test feature to use all log levels
+// FUNCTION: manualTest
+    // DESCRIPTION:
+    // Allows user to enter log messages manually.
+    // PARAMETERS:
+    // None
+    // RETURNS:
+    // None
     private static void manualTest() {
         Scanner scanner = new Scanner(System.in);
         String[] levels = {DEBUG, INFO, WARN, ERROR, FATAL};
@@ -121,7 +170,14 @@ private static void LoadConfig(String configFile) {
         scanner.close();
     }
 
-    // Automated test feature
+ // FUNCTION: automatedTest
+    // DESCRIPTION:
+    // Sends multiple logs automatically.
+    // PARAMETERS:
+    // None
+    // RETURNS:
+    // None
+
     private static void automatedTest() {
         System.out.println("Automated tests starting...");
         String[] levels = {DEBUG, INFO, WARN, ERROR, FATAL};
@@ -139,18 +195,26 @@ private static void LoadConfig(String configFile) {
                 Thread.sleep(50);
             }
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Restore interrupted status
+            Thread.currentThread().interrupt(); 
             System.out.println("Sleep interrupted: " + e.getMessage());
         }
     }
 
+
+     // FUNCTION: main
+    // DESCRIPTION:
+    // Starts the client and selects test type.
+    // PARAMETERS:
+    // args String[] - Command line arguments.
+    // RETURNS:
+    // None
     public static void main(String[] args) {
         LoadConfig("config.txt");
 
         Scanner scanner = new Scanner(System.in);
         System.out.print("Select test type: (1) Manual (2) Automated: ");
         int choice = scanner.nextInt();
-        scanner.nextLine(); // Consume newline
+        scanner.nextLine(); 
 
         if (choice == 1) {
             manualTest();
