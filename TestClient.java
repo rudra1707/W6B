@@ -65,26 +65,28 @@ private static void loadConfig(String configFile) {
     }
 }
 
-    // Send log message
-    public static void sendLog(String level, String message) {
-        try {
-            DatagramSocket socket = new DatagramSocket();
+ // Send log message with retry mechanism and try-with-resources
+ public static void sendLog(String level, String message, String requestId) {
+    for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try (DatagramSocket socket = new DatagramSocket()) {
             InetAddress serverAddress = InetAddress.getByName(serverIP);
 
-            // Manually create JSON-like log string
-            String logEntry = "{ \"level\": \"" + level + "\", \"message\": \"" + message + "\" }";
-
+            String logEntry = level + "|" + message + "|" + requestId;
             byte[] sendData = logEntry.getBytes();
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, serverAddress, serverPort);
-            socket.send(sendPacket);
-            socket.close();
 
+            socket.send(sendPacket);
             logToFile(logEntry);
-            System.out.println("Sent & Logged: " + logEntry);
+            System.out.println("Successfully sent log: " + logEntry);
+            break; // Exit loop if successful
         } catch (IOException e) {
-            System.out.println("Error sending log: " + e.getMessage());
+            System.out.println("Attempt " + attempt + " failed: " + e.getMessage());
+            if (attempt == MAX_RETRIES) {
+                System.out.println("Failed to send log after " + MAX_RETRIES + " attempts.");
+            }
         }
     }
+}
 
 
         // Log locally to a file
