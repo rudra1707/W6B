@@ -6,8 +6,8 @@ import java.util.regex.Pattern;
 public class TestClient {
     private static String serverIP;
     private static int serverPort;
-    private static final String LOG_FILE = "client_logs.txt";
-    private static final int MAX_RETRIES = 3;
+    private static final String logFile = "client_logs.txt";
+    private static final int MaxRetries = 3;
 
     // Log Level Constants (All will be used)
     private static final String DEBUG = "DEBUG";
@@ -18,18 +18,18 @@ public class TestClient {
 
 
 // Function to validate IP address format
-private static boolean isValidIP(String ip) {
+private static boolean ValidIP(String ip) {
     String pattern = "^\\d{1,3}(\\.\\d{1,3}){3}$";
     return Pattern.matches(pattern, ip);
 }
 
 // Function to validate port number
-private static boolean isValidPort(int port) {
+private static boolean ValidPort(int port) {
     return port >= 1024 && port <= 65535;
 }
 
 // Load configuration from config.txt (no default values)
-private static void loadConfig(String configFile) {
+private static void LoadConfig(String configFile) {
     File file = new File(configFile);
     if (!file.exists()) {
         System.out.println("Error: Config file not found. Please provide a valid 'config.txt'.");
@@ -39,9 +39,9 @@ private static void loadConfig(String configFile) {
     try (Scanner scanner = new Scanner(file)) {
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
-            if (line.startsWith("server_ip=")) {
+            if (line.startsWith("serverIP=")) {
                 serverIP = line.split("=")[1].trim();
-            } else if (line.startsWith("server_port=")) {
+            } else if (line.startsWith("serverPort=")) {
                 try {
                     serverPort = Integer.parseInt(line.split("=")[1].trim());
                 } catch (NumberFormatException e) {
@@ -55,11 +55,11 @@ private static void loadConfig(String configFile) {
         System.exit(1);
     }
 
-    if (serverIP == null || !isValidIP(serverIP)) {
+    if (serverIP == null || !ValidIP(serverIP)) {
         System.out.println("Error: Invalid or missing server IP in config file.");
         System.exit(1);
     }
-    if (serverPort == 0 || !isValidPort(serverPort)) {
+    if (serverPort == 0 || !ValidPort(serverPort)) {
         System.out.println("Error: Invalid or missing server port in config file.");
         System.exit(1);
     }
@@ -67,7 +67,7 @@ private static void loadConfig(String configFile) {
 
  // Send log message with retry mechanism and try-with-resources
  public static void sendLog(String level, String message, String requestId) {
-    for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    for (int attempt = 1; attempt <= MaxRetries; attempt++) {
         try (DatagramSocket socket = new DatagramSocket()) {
             InetAddress serverAddress = InetAddress.getByName(serverIP);
 
@@ -81,8 +81,8 @@ private static void loadConfig(String configFile) {
             break; // Exit loop if successful
         } catch (IOException e) {
             System.out.println("Attempt " + attempt + " failed: " + e.getMessage());
-            if (attempt == MAX_RETRIES) {
-                System.out.println("Failed to send log after " + MAX_RETRIES + " attempts.");
+            if (attempt == MaxRetries) {
+                System.out.println("Failed to send log after " + MaxRetries + " attempts.");
             }
         }
     }
@@ -91,7 +91,7 @@ private static void loadConfig(String configFile) {
 
        // Log locally to a file
     private static void logToFile(String logEntry) {
-        try (FileWriter writer = new FileWriter(LOG_FILE, true)) {
+        try (FileWriter writer = new FileWriter(logFile, true)) {
             writer.write(logEntry + "\n");
         } catch (IOException e) {
             System.out.println("Error writing to client log file: " + e.getMessage());
@@ -145,7 +145,7 @@ private static void loadConfig(String configFile) {
     }
 
     public static void main(String[] args) {
-        loadConfig("config.txt");
+        LoadConfig("config.txt");
 
         Scanner scanner = new Scanner(System.in);
         System.out.print("Select test type: (1) Manual (2) Automated: ");
