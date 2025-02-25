@@ -7,6 +7,15 @@ public class TestClient {
     private static String serverIP;
     private static int serverPort;
     private static final String LOG_FILE = "client_logs.txt";
+    private static final int MAX_RETRIES = 3;
+
+    // Log Level Constants (All will be used)
+    private static final String DEBUG = "DEBUG";
+    private static final String INFO = "INFO";
+    private static final String WARN = "WARN";
+    private static final String ERROR = "ERROR";
+    private static final String FATAL = "FATAL";
+
 
 // Function to validate IP address format
 private static boolean isValidIP(String ip) {
