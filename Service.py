@@ -1,3 +1,10 @@
+# FILE: Service.py
+# PROJECT: UDP Logging System
+# PROGRAMMER: VIRAJSINH SOLANKI (8981864) & RUDRA NITESHKUMAR BHATT(8980507)
+# FIRST VERSION: 2025-02-25
+# DESCRIPTION:
+# This script runs a UDP logging server. It receives log messages, 
+# checks their format, limits message rate per client, and saves logs to a file.
 import socket
 import time
 import os
@@ -14,7 +21,7 @@ FATAL = "FATAL"
 
 # Configurable settings
 logFile = "logs.txt"
-rateLimit = 5  # Max messages per second per client
+rateLimit = 5  
 bufferSize = 1024
 serviceName = "LoggingService"
 
@@ -31,16 +38,36 @@ except IOError as e:
     exit(1)
 
 
-# Function to validate IP address format
+# FUNCTION: ValidIP
+# DESCRIPTION:
+# Checks if an IP address is in the correct format.
+# PARAMETERS:
+# ip (str) - The IP address to check.
+# RETURNS:
+# bool - True if valid, False otherwise.
 def ValidIP(ip):
     pattern = r"^\d{1,3}(\.\d{1,3}){3}$"
     return re.match(pattern, ip) is not None
 
-# Function to validate port number
+
+# FUNCTION: ValidPort
+# DESCRIPTION:
+# Checks if a port number is valid.
+# PARAMETERS:
+# port (int) - The port number to check.
+# RETURNS:
+# bool - True if valid, False otherwise.
 def ValidPort(port):
     return 1024 <= port <= 65535
 
-# Load Configuration from config.txt (No Defaults)
+
+# FUNCTION: LoadConfig
+# DESCRIPTION:
+# Reads server IP and port from a configuration file.
+# PARAMETERS:
+# ConfigFile (str) - Path to the config file.
+# RETURNS:
+# dict - Dictionary with 'serverIP' and 'serverPort'.
 def LoadConfig(ConfigFile):
     config = {}
 
@@ -62,7 +89,6 @@ def LoadConfig(ConfigFile):
         print("Config file not found. Please provide a valid 'config.txt' file.")
         exit(1)
 
-    # Error handling for missing or invalid values
     if "serverIP" not in config or not ValidIP(config["serverIP"]):
         print("Invalid or missing server IP in config file. Please provide a valid IP.")
         exit(1)
@@ -74,13 +100,20 @@ def LoadConfig(ConfigFile):
     return config
 
 
-# Rate limiting per client
+
+
+# FUNCTION: rateLimited
+# DESCRIPTION:
+# Limits the number of logs per second for a client.
+# PARAMETERS:
+# ClientIP (str) - The IP address of the client.
+# RETURNS:
+# bool - True if the client exceeded the limit, False otherwise.
 def rateLimited(ClientIP):
     now = time.time()
     if ClientIP not in clientLogTimes:
         clientLogTimes[ClientIP] = []
 
-    # Remove timestamps older than 1 second
     clientLogTimes[ClientIP] = [
         timestamp for timestamp in clientLogTimes[ClientIP]
         if now - timestamp < 1
@@ -92,17 +125,27 @@ def rateLimited(ClientIP):
     clientLogTimes[ClientIP].append(now)
     return False
 
-# Format Log Entry
+
+# FUNCTION: FormatLog
+# DESCRIPTION:
+# Formats log messages with timestamp and details.
+# PARAMETERS:
+# level (str) - Log level.
+# ClientIP (str) - Client IP address.
+# message (str) - Log message.
+# requestID (str) - Unique request ID.
+# RETURNS:
+# str - Formatted log string.
 def FormatLog(level, ClientIP, message, requestID):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     return f"[{timestamp}] [{level}] [{ClientIP}] [{serviceName}] {message} [{requestID}]"
 
-# Load configuration
+# Load server configuration
 config = LoadConfig("config.txt")
 serverIP = config["serverIP"]
 serverPort = config["serverPort"]
 
-# Create UDP Server Socket
+# Start UDP Server
 try:
     UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
     UDPServerSocket.bind((serverIP, serverPort))
@@ -111,7 +154,7 @@ except socket.error as e:
     print(f"Failed to create UDP server socket: {e}")
     exit(1)
 
-# Main server loop with error handling
+# Main server loop with proper error handling
 while True:
     try:
         bytes_address_pair = UDPServerSocket.recvfrom(bufferSize)
