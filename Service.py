@@ -5,6 +5,13 @@
 # DESCRIPTION:
 # This script runs a UDP logging server. It receives log messages, 
 # checks their format, limits message rate per client, and saves logs to a file.
+
+# Reference for UDP Socket Communication:
+# https://realpython.com/python-sockets/#udp
+
+# Reference for File Handling:
+# https://docs.python.org/3/tutorial/inputoutput.html#reading-and-writing-files
+
 import socket
 import time
 import os
