@@ -19,6 +19,18 @@ BUFFER_SIZE = 1024
 SERVICE_NAME = "LoggingService"
 
 
+# Track last log timestamps per client
+client_log_times = {}
+
+# Ensure log file exists
+try:
+    if not os.path.exists(LOG_FILE):
+        open(LOG_FILE, "w").close()
+except IOError as e:
+    print(f"Error creating log file: {e}")
+    exit(1)
+
+
 # Function to validate IP address format
 def is_valid_ip(ip):
     pattern = r"^\d{1,3}(\.\d{1,3}){3}$"
