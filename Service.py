@@ -5,6 +5,20 @@ import re
 
 from datetime import datetime
 
+# Log Level Constants
+DEBUG = "DEBUG"
+INFO = "INFO"
+WARN = "WARN"
+ERROR = "ERROR"
+FATAL = "FATAL"
+
+# Configurable settings
+LOG_FILE = "logs.txt"
+RATE_LIMIT = 5  # Max messages per second per client
+BUFFER_SIZE = 1024
+SERVICE_NAME = "LoggingService"
+
+
 # Function to validate IP address format
 def is_valid_ip(ip):
     pattern = r"^\d{1,3}(\.\d{1,3}){3}$"
