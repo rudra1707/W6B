@@ -13,47 +13,47 @@ ERROR = "ERROR"
 FATAL = "FATAL"
 
 # Configurable settings
-LOG_FILE = "logs.txt"
-RATE_LIMIT = 5  # Max messages per second per client
-BUFFER_SIZE = 1024
-SERVICE_NAME = "LoggingService"
+logFile = "logs.txt"
+rateLimit = 5  # Max messages per second per client
+bufferSize = 1024
+serviceName = "LoggingService"
 
 
 # Track last log timestamps per client
-client_log_times = {}
+clientLogTimes = {}
 
 # Ensure log file exists
 try:
-    if not os.path.exists(LOG_FILE):
-        open(LOG_FILE, "w").close()
+    if not os.path.exists(logFile):
+        open(logFile, "w").close()
 except IOError as e:
     print(f"Error creating log file: {e}")
     exit(1)
 
 
 # Function to validate IP address format
-def is_valid_ip(ip):
+def ValidIP(ip):
     pattern = r"^\d{1,3}(\.\d{1,3}){3}$"
     return re.match(pattern, ip) is not None
 
 # Function to validate port number
-def is_valid_port(port):
+def ValidPort(port):
     return 1024 <= port <= 65535
 
 # Load Configuration from config.txt (No Defaults)
-def load_config(config_file):
+def LoadConfig(ConfigFile):
     config = {}
 
-    if os.path.exists(config_file):
+    if os.path.exists(ConfigFile):
         try:
-            with open(config_file, "r") as f:
+            with open(ConfigFile, "r") as f:
                 for line in f:
                     line = line.strip()
-                    if line.startswith("server_ip="):
-                        config["server_ip"] = line.split("=")[1].strip()
-                    elif line.startswith("server_port="):
+                    if line.startswith("serverIP="):
+                        config["serverIP"] = line.split("=")[1].strip()
+                    elif line.startswith("serverPort="):
                         try:
-                            config["server_port"] = int(line.split("=")[1].strip())
+                            config["serverPort"] = int(line.split("=")[1].strip())
                         except ValueError:
                             print("Invalid port format in config file.")
         except IOError as e:
@@ -63,11 +63,11 @@ def load_config(config_file):
         exit(1)
 
     # Error handling for missing or invalid values
-    if "server_ip" not in config or not is_valid_ip(config["server_ip"]):
+    if "serverIP" not in config or not ValidIP(config["serverIP"]):
         print("Invalid or missing server IP in config file. Please provide a valid IP.")
         exit(1)
 
-    if "server_port" not in config or not is_valid_port(config["server_port"]):
+    if "serverPort" not in config or not ValidPort(config["serverPort"]):
         print("Invalid or missing server port in config file. Please provide a valid port number (1024-65535).")
         exit(1)
 
@@ -75,38 +75,38 @@ def load_config(config_file):
 
 
 # Rate limiting per client
-def rate_limited(client_ip):
+def rateLimited(ClientIP):
     now = time.time()
-    if client_ip not in client_log_times:
-        client_log_times[client_ip] = []
+    if ClientIP not in clientLogTimes:
+        clientLogTimes[ClientIP] = []
 
     # Remove timestamps older than 1 second
-    client_log_times[client_ip] = [
-        timestamp for timestamp in client_log_times[client_ip]
+    clientLogTimes[ClientIP] = [
+        timestamp for timestamp in clientLogTimes[ClientIP]
         if now - timestamp < 1
     ]
 
-    if len(client_log_times[client_ip]) >= RATE_LIMIT:
+    if len(clientLogTimes[ClientIP]) >= rateLimit:
         return True
 
-    client_log_times[client_ip].append(now)
+    clientLogTimes[ClientIP].append(now)
     return False
 
 # Format Log Entry
-def format_log(level, client_ip, message, request_id):
+def FormatLog(level, ClientIP, message, requestID):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    return f"[{timestamp}] [{level}] [{client_ip}] [{SERVICE_NAME}] {message} [{request_id}]"
+    return f"[{timestamp}] [{level}] [{ClientIP}] [{serviceName}] {message} [{requestID}]"
 
 # Load configuration
-config = load_config("config.txt")
-server_ip = config["server_ip"]
-server_port = config["server_port"]
+config = LoadConfig("config.txt")
+serverIP = config["serverIP"]
+serverPort = config["serverPort"]
 
 # Create UDP Server Socket
 try:
     UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    UDPServerSocket.bind((server_ip, server_port))
-    print(f"UDP Logging Service started on {server_ip}:{server_port}")
+    UDPServerSocket.bind((serverIP, serverPort))
+    print(f"UDP Logging Service started on {serverIP}:{serverPort}")
 except socket.error as e:
     print(f"Failed to create UDP server socket: {e}")
     exit(1)
@@ -114,7 +114,7 @@ except socket.error as e:
 # Main server loop with error handling
 while True:
     try:
-        bytes_address_pair = UDPServerSocket.recvfrom(BUFFER_SIZE)
+        bytes_address_pair = UDPServerSocket.recvfrom(bufferSize)
         message = bytes_address_pair[0].decode("utf-8").strip()
         client_address = bytes_address_pair[1][0]
 
@@ -127,22 +127,22 @@ while True:
             print(f"Invalid log format from {client_address}: {message}")
             continue
 
-        level, log_message, request_id = log_parts
+        level, log_message, requestID = log_parts
 
         if level not in [DEBUG, INFO, WARN, ERROR, FATAL]:
             print(f"Invalid log level received from {client_address}: {level}")
             continue
 
-        if rate_limited(client_address):
+        if rateLimited(client_address):
             print(f"Rate limit exceeded for {client_address}. Dropping log.")
             continue
 
-        log_entry = format_log(level, client_address, log_message, request_id)
+        logEntry = FormatLog(level, client_address, log_message, requestID)
 
         try:
-            with open(LOG_FILE, "a") as f:
-                f.write(log_entry + "\n")
-            print(f"Logged: {log_entry}")
+            with open(logFile, "a") as f:
+                f.write(logEntry + "\n")
+            print(f"Logged: {logEntry}")
         except IOError as e:
             print(f"Error writing log entry to file: {e}")
 
