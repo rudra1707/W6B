@@ -102,51 +102,52 @@ config = load_config("config.txt")
 server_ip = config["server_ip"]
 server_port = config["server_port"]
 
-buffer_size = 1024
-log_file = "logs.txt"
-RATE_LIMIT = 5  # Max messages per second per client
+# Create UDP Server Socket
+try:
+    UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+    UDPServerSocket.bind((server_ip, server_port))
+    print(f"UDP Logging Service started on {server_ip}:{server_port}")
+except socket.error as e:
+    print(f"Failed to create UDP server socket: {e}")
+    exit(1)
 
-# Track last log timestamps per client
-client_log_times = {}
-
-# Ensure log file exists
-if not os.path.exists(log_file):
-    open(log_file, "w").close()
-
-# Create a UDP socket
-UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-UDPServerSocket.bind((server_ip, server_port))
-
-print(f"UDP Logging Service started on {server_ip}:{server_port}")
-
-def rate_limited(client_address):
-    """Check if client is sending logs too fast."""
-    now = time.time()
-    if client_address in client_log_times:
-        if now - client_log_times[client_address] < (1 / RATE_LIMIT):
-            return True
-    client_log_times[client_address] = now
-    return False
-
+# Main server loop with error handling
 while True:
-    bytes_address_pair = UDPServerSocket.recvfrom(buffer_size)
-    message = bytes_address_pair[0].decode("utf-8")
-    client_address = bytes_address_pair[1]
-
     try:
-        log_entry = eval(message)  # Converts string dictionary to actual dictionary
-        log_entry["timestamp"] = datetime.now().isoformat()
-        log_entry["client_ip"] = client_address[0]
+        bytes_address_pair = UDPServerSocket.recvfrom(BUFFER_SIZE)
+        message = bytes_address_pair[0].decode("utf-8").strip()
+        client_address = bytes_address_pair[1][0]
 
-        if rate_limited(client_address[0]):
-            print(f"Rate limit exceeded for {client_address[0]}. Dropping log.")
+        if not message:
+            print(f"Received empty message from {client_address}")
             continue
 
-        # Append log entry to file
-        with open(log_file, "a") as f:
-            f.write(str(log_entry) + "\n")
+        log_parts = message.split("|")
+        if len(log_parts) != 3:
+            print(f"Invalid log format from {client_address}: {message}")
+            continue
 
-        print(f"Logged: {log_entry}")
+        level, log_message, request_id = log_parts
 
+        if level not in [DEBUG, INFO, WARN, ERROR, FATAL]:
+            print(f"Invalid log level received from {client_address}: {level}")
+            continue
+
+        if rate_limited(client_address):
+            print(f"Rate limit exceeded for {client_address}. Dropping log.")
+            continue
+
+        log_entry = format_log(level, client_address, log_message, request_id)
+
+        try:
+            with open(LOG_FILE, "a") as f:
+                f.write(log_entry + "\n")
+            print(f"Logged: {log_entry}")
+        except IOError as e:
+            print(f"Error writing log entry to file: {e}")
+
+    except socket.error as e:
+        print(f"Network error: {e}")
     except Exception as e:
-        print(f"Error processing log from {client_address[0]}: {message} ({e})")
+        print(f"Unexpected error occurred: {e}")
+ 
