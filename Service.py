@@ -40,29 +40,36 @@ def is_valid_ip(ip):
 def is_valid_port(port):
     return 1024 <= port <= 65535
 
-# Load configuration from a text file
+# Load Configuration from config.txt (No Defaults)
 def load_config(config_file):
-    config = {"server_ip": "0.0.0.0", "server_port": 5000}  # Default values
+    config = {}
 
     if os.path.exists(config_file):
-        with open(config_file, "r") as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith("server_ip="):
-                    config["server_ip"] = line.split("=")[1].strip()
-                elif line.startswith("server_port="):
-                    try:
-                        config["server_port"] = int(line.split("=")[1].strip())
-                    except ValueError:
-                        print("Invalid port in config file. Using default 5000.")
+        try:
+            with open(config_file, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("server_ip="):
+                        config["server_ip"] = line.split("=")[1].strip()
+                    elif line.startswith("server_port="):
+                        try:
+                            config["server_port"] = int(line.split("=")[1].strip())
+                        except ValueError:
+                            print("Invalid port format in config file.")
+        except IOError as e:
+            print(f"Error reading config file: {e}")
+    else:
+        print("Config file not found. Please provide a valid 'config.txt' file.")
+        exit(1)
 
-    if not is_valid_ip(config["server_ip"]):
-        print("Invalid IP in config file. Using default 0.0.0.0.")
-        config["server_ip"] = "0.0.0.0"
+    # Error handling for missing or invalid values
+    if "server_ip" not in config or not is_valid_ip(config["server_ip"]):
+        print("Invalid or missing server IP in config file. Please provide a valid IP.")
+        exit(1)
 
-    if not is_valid_port(config["server_port"]):
-        print("Invalid port in config file. Using default 5000.")
-        config["server_port"] = 5000
+    if "server_port" not in config or not is_valid_port(config["server_port"]):
+        print("Invalid or missing server port in config file. Please provide a valid port number (1024-65535).")
+        exit(1)
 
     return config
 
